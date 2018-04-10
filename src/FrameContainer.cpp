@@ -10,18 +10,9 @@
 FrameContainer::FrameContainer() {
 }
 
-FrameContainer::FrameContainer(cv::Mat &frame, std::vector<vmat> &histograms, int norm,
-                               double threshold, int real_frame_position) :
-        frame(frame),
-        histograms(histograms),
-        norm(norm),
-        threshold(threshold),
-        real_frame_position(real_frame_position) {
-}
 
-FrameContainer::FrameContainer(cv::Mat &frame, int norm, double threshold, int real_frame_position) :
-        norm(norm), threshold(threshold), real_frame_position(real_frame_position) {
 
+FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) : real_frame_position(real_frame_position) {
   cv::cvtColor(frame, this->frame, cv::COLOR_BGR2GRAY);
   cv::resize(this->frame, this->frame, cv::Size(400, 300));
   cv::Size s = this->frame.size();
@@ -42,6 +33,29 @@ FrameContainer::FrameContainer(cv::Mat &frame, int norm, double threshold, int r
 
       cv::Rect currentROI(x_start, y_start, roi_width, roi_height);
       cv::Mat cropped = this->frame(currentROI);
+      cv::Mat detected_edges;
+
+      cv::blur(cropped, detected_edges, cv::Size(3, 3));
+
+      int ratio = 3;
+      int kernel_size = 3;
+      int lower_th = 30;
+      cv::Canny(detected_edges, detected_edges, lower_th, lower_th*ratio, kernel_size);
+      cv::Mat dst;
+      cropped.copyTo(dst, detected_edges);
+      cropped = dst;
+      /*
+      //sobelizado
+      cv::Mat sobel_x, sobel_y, grad;
+
+      int ddepth = CV_32F;
+      cv::Sobel(cropped, sobel_x, ddepth, 1, 0);
+      cv::Sobel(cropped, sobel_y, ddepth, 0, 1);
+      cv::convertScaleAbs(sobel_x, sobel_x);
+      cv::convertScaleAbs(sobel_y, sobel_y);
+      cv::addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0, cropped);
+      // end sobelizado
+       */
       cv::Mat histo_cropped = getHistogram(cropped);
       aux_hist.push_back(histo_cropped);
     }
@@ -49,19 +63,38 @@ FrameContainer::FrameContainer(cv::Mat &frame, int norm, double threshold, int r
   }
 }
 
-FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) :
-        FrameContainer(frame, cv::NORM_L1, DEFAULT_LOWER_THRESHOLD, real_frame_position) {
+FrameContainer::FrameContainer(cv::Mat &frame, std::vector<vmat> &histograms, int real_frame_position) :
+        frame(frame), histograms(histograms), real_frame_position(real_frame_position){
+
 }
 
-
-
+cv::Mat collapseHistogramXAxis(cv::Mat &original, int nextRange){
+  cv::Mat out = cv::Mat::zeros(cv::Size(1, nextRange), original.type());
+  int currentRange = original.rows;
+  int step = currentRange/nextRange;
+  float acc = original.at<float>(0, 0);
+  int counter = 0;
+  for(int i = 1; i < currentRange; i++){
+    if(i % step == 0){
+      out.at<float>(counter, 0) = acc/step;
+      acc = 0;
+      counter++;
+    }
+    acc += original.at<float>(i, 0);
+  }
+  if(acc > 0){
+    out.at<float>(counter, 0) = acc/step;
+  }
+  return out;
+}
 cv::Mat FrameContainer::getHistogram(cv::Mat &whichImage) {
   cv::Mat toSave;
-  int histSize = 16;
-  float range[] = {0, 16};
+  int histSize = 256;
+  float range[] = {0, 256};
   const float *histRange = {range};
   int channels[] = {0};
   cv::calcHist(&whichImage, 1, channels, cv::Mat(), toSave, 1, &histSize, &histRange, true, false);
+  toSave = collapseHistogramXAxis(toSave, 2);
   cv::normalize(toSave, toSave);
 
   return toSave;
@@ -72,32 +105,6 @@ std::vector<vmat> &FrameContainer::getHistograms() {
   return this->histograms;
 }
 
-double FrameContainer::distanceTo(FrameContainer &otherContainer) {
-  std::vector<vmat> &theirHistograms = otherContainer.getHistograms();
-  std::vector<vmat> &mineHistograms = this->getHistograms();
-  double sum = 0;
-  auto N = (int) mineHistograms.size();
-  auto M = (int) mineHistograms[0].size();
-  double max_dist = 1;
-  for(int i = 0; i < mineHistograms.size(); i++){
-    for(int j = 0; j < mineHistograms[i].size(); j++){
-      cv::Mat &mine = mineHistograms[i][j];
-      cv::Mat &theirs = theirHistograms[i][j];
-      double dist = cv::compareHist(mine, theirs, CV_COMP_CHISQR);
-      max_dist = std::max(dist, max_dist);
-
-      //std::cout << "chidist: " << dist << std::endl;
-
-
-      if(dist > DEFAULT_LOWER_THRESHOLD){
-        sum++;
-      }
-
-      //sum+= dist;
-    }
-  }
-  return sum / (N*M);
-}
 
 cv::Mat &FrameContainer::getFrame() {
   return this->frame;
@@ -114,8 +121,8 @@ vecFC getVecFC(cv::VideoCapture &videoCapture){
   int frame_count = (int)(videoCapture.get(cv::CAP_PROP_FRAME_COUNT));
   double fps = videoCapture.get(cv::CAP_PROP_FPS);
 
-  std::cout << "frame count istristream s: " << frame_count << std::endl;
-  std::cout << "fps is: " << fps << std::endl;
+  //std::cout << "frame count istristream s: " << frame_count << std::endl;
+  //std::cout << "fps is: " << fps << std::endl;
   int real_counter = -1;
   while(videoCapture.grab()){
     real_counter++;
@@ -131,8 +138,8 @@ vecFC getVecFC(cv::VideoCapture &videoCapture){
       which++;
       which %= 3;
     }
-    if(counter % 20000 == 0){
-      std::cout << "counter = " << counter << std::endl;
+    if(counter % 5000 == 0){
+      std::cout << "progress: " << ((double)counter)*100/((double)frame_count) << std::endl;
     }
     counter++;
     offset = 0;
@@ -142,7 +149,7 @@ vecFC getVecFC(cv::VideoCapture &videoCapture){
 
 vecFC getVecFC(const std::string &storedSerialized) {
   std::ifstream ifs(storedSerialized);
-  std::cout << "trying to read filename: '" << storedSerialized << "'" << std::endl;
+  //std::cout << "trying to read filename: '" << storedSerialized << "'" << std::endl;
   if(!ifs){
     std::cout << "could not read ifs of " << storedSerialized << std::endl;
   }

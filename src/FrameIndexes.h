@@ -8,21 +8,31 @@
 
 #include <vector>
 #include "FrameIndexContainer.h"
+#include "VideoContainer.h"
+#include <boost/serialization/vector.hpp>
+
+typedef std::vector<FrameIndexContainer> vecFIC;
 
 class FrameIndexes {
+  VideoContainer& associatedVideo;
 
 public:
-  std::vector<FrameIndexContainer> indexes;
+  vecFIC indexes;
 
-  FrameIndexes();
+  explicit FrameIndexes(VideoContainer& associatedVideo);
 
-  void setNextIndex(FrameIndexContainer & frameIndexContainer);
-  void setNextIndex(int framePosition, int dstId);
+  void setNextIndex(FrameIndexContainer& frameIndexContainer);
+  void setNextIndex(int dstId, int framePosition);
 
+  VideoContainer &getAssociatedVideo();
 
+  void populateWithFile(const std::string& filename);
+  void saveToFile(const std::string& filename);
 
+  void print();
 
 };
+
 
 
 #endif //$_TARGET_NAME_FRAMEINDEXES_H

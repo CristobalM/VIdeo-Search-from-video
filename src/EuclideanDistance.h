@@ -10,8 +10,9 @@
 
 class EuclideanDistance : public QueryDistance {
 public:
-  virtual EuclideanDistance() = default;
-  double compare(FrameContainer &A, FrameContainer &B) override;
+  EuclideanDistance() = default;
+
+  double distance(cv::Mat &A, cv::Mat &B) override;
 
 
 };

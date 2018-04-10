@@ -9,19 +9,16 @@
 #include "FrameContainer.h"
 #include "FrameIndexes.h"
 #include "QueryDistance.h"
+#include "VideoContainer.h"
 
 typedef std::vector<vecFC> vecvecFC;
 
 class SimilaritySearch {
-  std::shared_ptr<vecFC> data;
-  std::shared_ptr<vecvecFC> queries;
-
-  QueryDistance queryDistance;
+  QueryDistance *queryDistance;
 public:
-  SimilaritySearch(std::shared_ptr<vecFC> data, std::shared_ptr<vecvecFC> queries);
-  SimilaritySearch(std::shared_ptr<vecFC> data, std::shared_ptr<vecvecFC> queries, QueryDistance &queryDistance);
+  explicit SimilaritySearch(QueryDistance *queryDistance);
 
-  FrameIndexes search();
+  void search(FrameIndexes &frameIndexes, vecVC &queries);
 
 };
 

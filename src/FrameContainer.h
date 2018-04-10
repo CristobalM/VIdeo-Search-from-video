@@ -16,8 +16,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
-const int IMAGE_PARTS = 8;
-const double DEFAULT_LOWER_THRESHOLD = 500;
+const int IMAGE_PARTS = 10;
 
 typedef std::vector<cv::Mat> vmat;
 
@@ -28,20 +27,16 @@ class FrameContainer {
 public:
   cv::Mat frame;
   std::vector<vmat> histograms;
-  int norm;
-  double threshold;
   int real_frame_position;
 
   explicit FrameContainer();
-  explicit FrameContainer(cv::Mat &frame, int distance, double threshold, int real_frame_position);
   explicit FrameContainer(cv::Mat &frame, int real_frame_position);
 
-  explicit FrameContainer(cv::Mat &frame, std::vector<vmat> &histograms, int norm, double threshold, int real_frame_position);
+  explicit FrameContainer(cv::Mat &frame, std::vector<vmat> &histograms, int real_frame_position);
 
   //std::vector<vmat> &getMiniImages();
   std::vector<vmat> &getHistograms();
 
-  double distanceTo(FrameContainer &otherContainer);
 
   cv::Mat &getFrame();
 
@@ -70,10 +65,9 @@ namespace boost{
     void serialize(Archive &ar, FrameContainer &frameContainer, const unsigned int version) {
       ar & frameContainer.frame;
       ar & frameContainer.histograms;
-      ar & frameContainer.norm;
-      ar & frameContainer.threshold;
       ar & frameContainer.real_frame_position;
     }
+
 
 
     template<class Archive>

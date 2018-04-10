@@ -10,7 +10,8 @@
 
 class QueryDistance {
 public:
-  virtual double compare(FrameContainer &A, FrameContainer &B) = 0;
+  double compare(FrameContainer &A, FrameContainer &B);
+  virtual double distance(cv::Mat &A, cv::Mat &B) = 0;
 
 };
 

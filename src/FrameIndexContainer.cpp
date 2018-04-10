@@ -4,7 +4,7 @@
 
 #include "FrameIndexContainer.h"
 
-FrameIndexContainer::FrameIndexContainer(int framePosition, int dstId)
-        : framePosition(framePosition),
-          dstId(dstId) {
+FrameIndexContainer::FrameIndexContainer(int dstId, int framePosition)
+        : dstId(dstId),
+          framePosition(framePosition){
 }
