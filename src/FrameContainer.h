@@ -16,7 +16,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
-const int IMAGE_PARTS = 4;
+const int IMAGE_PARTS = 10;
 
 typedef std::vector<cv::Mat> vmat;
 

@@ -36,9 +36,8 @@ FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) : real_f
       cv::Mat cropped = frame(currentROI);
       cv::Mat detected_edges;
 
-      cv::blur(cropped, cropped, cv::Size(5, 5));
+      cv::blur(cropped, detected_edges, cv::Size(3, 3));
 
-/*
       int ratio = 3;
       int kernel_size = 3;
       int lower_th = 30;
@@ -46,8 +45,7 @@ FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) : real_f
       cv::Mat dst;
       cropped.copyTo(dst, detected_edges);
       cropped = dst;
-
-       /*
+      /*
       //sobelizado
       cv::Mat sobel_x, sobel_y, grad;
 
@@ -98,7 +96,7 @@ cv::Mat FrameContainer::getHistogram(cv::Mat &whichImage) {
   const float *histRange = {range};
   int channels[] = {0};
   cv::calcHist(&whichImage, 1, channels, cv::Mat(), toSave, 1, &histSize, &histRange, true, false);
-  toSave = collapseHistogramXAxis(toSave, 16);
+  toSave = collapseHistogramXAxis(toSave, 2);
   cv::normalize(toSave, toSave);
 
   return toSave;
