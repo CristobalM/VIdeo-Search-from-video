@@ -6,6 +6,7 @@
 #include "FrameContainer.h"
 #include <unistd.h>
 #include <fstream>
+#include <boost/progress.hpp>
 
 FrameContainer::FrameContainer() {
 }
@@ -13,9 +14,9 @@ FrameContainer::FrameContainer() {
 
 
 FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) : real_frame_position(real_frame_position) {
-  cv::cvtColor(frame, this->frame, cv::COLOR_BGR2GRAY);
-  cv::resize(this->frame, this->frame, cv::Size(400, 300));
-  cv::Size s = this->frame.size();
+  cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+  cv::resize(frame, frame, cv::Size(256, 256));
+  cv::Size s = frame.size();
   int rows = s.height;
   int cols = s.width;
   int rows_mini = rows / IMAGE_PARTS ;
@@ -32,11 +33,12 @@ FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) : real_f
       int roi_width = std::min<int>(cols_mini, cols - x_start);
 
       cv::Rect currentROI(x_start, y_start, roi_width, roi_height);
-      cv::Mat cropped = this->frame(currentROI);
+      cv::Mat cropped = frame(currentROI);
       cv::Mat detected_edges;
 
-      cv::blur(cropped, detected_edges, cv::Size(3, 3));
+      cv::blur(cropped, cropped, cv::Size(5, 5));
 
+/*
       int ratio = 3;
       int kernel_size = 3;
       int lower_th = 30;
@@ -44,7 +46,8 @@ FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) : real_f
       cv::Mat dst;
       cropped.copyTo(dst, detected_edges);
       cropped = dst;
-      /*
+
+       /*
       //sobelizado
       cv::Mat sobel_x, sobel_y, grad;
 
@@ -55,7 +58,8 @@ FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) : real_f
       cv::convertScaleAbs(sobel_y, sobel_y);
       cv::addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0, cropped);
       // end sobelizado
-       */
+      */
+
       cv::Mat histo_cropped = getHistogram(cropped);
       aux_hist.push_back(histo_cropped);
     }
@@ -63,8 +67,8 @@ FrameContainer::FrameContainer(cv::Mat &frame, int real_frame_position) : real_f
   }
 }
 
-FrameContainer::FrameContainer(cv::Mat &frame, std::vector<vmat> &histograms, int real_frame_position) :
-        frame(frame), histograms(histograms), real_frame_position(real_frame_position){
+FrameContainer::FrameContainer(std::vector<vmat> &histograms, int real_frame_position) :
+        histograms(histograms), real_frame_position(real_frame_position){
 
 }
 
@@ -94,7 +98,7 @@ cv::Mat FrameContainer::getHistogram(cv::Mat &whichImage) {
   const float *histRange = {range};
   int channels[] = {0};
   cv::calcHist(&whichImage, 1, channels, cv::Mat(), toSave, 1, &histSize, &histRange, true, false);
-  toSave = collapseHistogramXAxis(toSave, 2);
+  toSave = collapseHistogramXAxis(toSave, 16);
   cv::normalize(toSave, toSave);
 
   return toSave;
@@ -106,11 +110,8 @@ std::vector<vmat> &FrameContainer::getHistograms() {
 }
 
 
-cv::Mat &FrameContainer::getFrame() {
-  return this->frame;
-}
 
-const int grab_times[] = {5, 15, 25};
+const int grab_times[] = {1, 10, 25};
 const int FPS = 30;
 vecFC getVecFC(cv::VideoCapture &videoCapture){
   vecFC output;
@@ -119,11 +120,10 @@ vecFC getVecFC(cv::VideoCapture &videoCapture){
   int which = 0;
   long offset = 0;
   int frame_count = (int)(videoCapture.get(cv::CAP_PROP_FRAME_COUNT));
-  double fps = videoCapture.get(cv::CAP_PROP_FPS);
 
-  //std::cout << "frame count istristream s: " << frame_count << std::endl;
-  //std::cout << "fps is: " << fps << std::endl;
   int real_counter = -1;
+  std::cout << "Beginning histogram calculation.. Total number of frames: " << frame_count << std::endl;
+  boost::progress_display show_progress(frame_count);
   while(videoCapture.grab()){
     real_counter++;
     if(!videoCapture.retrieve(frame)){
@@ -139,9 +139,10 @@ vecFC getVecFC(cv::VideoCapture &videoCapture){
       which %= 3;
     }
     if(counter % 5000 == 0){
-      std::cout << "progress: " << ((double)counter)*100/((double)frame_count) << std::endl;
+      //std::cout << "progress: " << ((double)counter)*100/((double)frame_count) << "%" std::endl;
     }
     counter++;
+    ++show_progress;
     offset = 0;
   }
   return output;

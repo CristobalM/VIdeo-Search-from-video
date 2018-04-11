@@ -16,7 +16,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
-const int IMAGE_PARTS = 10;
+const int IMAGE_PARTS = 4;
 
 typedef std::vector<cv::Mat> vmat;
 
@@ -25,20 +25,18 @@ class FrameContainer {
 
 
 public:
-  cv::Mat frame;
   std::vector<vmat> histograms;
   int real_frame_position;
 
   explicit FrameContainer();
   explicit FrameContainer(cv::Mat &frame, int real_frame_position);
 
-  explicit FrameContainer(cv::Mat &frame, std::vector<vmat> &histograms, int real_frame_position);
+  explicit FrameContainer(std::vector<vmat> &histograms, int real_frame_position);
 
   //std::vector<vmat> &getMiniImages();
   std::vector<vmat> &getHistograms();
 
 
-  cv::Mat &getFrame();
 
   template<class Archive>
   friend void boost::serialization::serialize(Archive &, FrameContainer &, const unsigned int);
@@ -63,7 +61,7 @@ namespace boost{
   namespace serialization{
     template<class Archive>
     void serialize(Archive &ar, FrameContainer &frameContainer, const unsigned int version) {
-      ar & frameContainer.frame;
+      //ar & frameContainer.frame;
       ar & frameContainer.histograms;
       ar & frameContainer.real_frame_position;
     }

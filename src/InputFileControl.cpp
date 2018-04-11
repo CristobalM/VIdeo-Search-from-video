@@ -23,12 +23,14 @@ vecFC InputFileControl::processOrRetrieveHData(const std::string &filename, cons
   vecFC out;
   std::string histo_file(filename + suffix + HISTOGRAMS_BIN);
   if(fileExists(histo_file)){
+    std::cout << "Reading: " << histo_file << std::endl;
     out = getVecFC(histo_file);
   }
   else{
     cv::VideoCapture capture;
     capture.open(filename);
     if(capture.isOpened()){
+      std::cout << "Histogram to calculate: " << filename << std::endl;
       out = getVecFC(capture);
       saveVecFC(histo_file, out);
     }
