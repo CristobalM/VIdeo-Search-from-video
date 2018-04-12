@@ -28,17 +28,17 @@ set(BASE_SOURCE src/FrameContainer.cpp src/FrameContainer.h
         src/VideoFindResult.cpp src/VideoFindResult.h)
 
 add_library(tarea1MIRLib ${BASE_SOURCE})
-set(SOURCE_FILES main.cpp ${BASE_SOURCE})
+#set(SOURCE_FILES main.cpp ${BASE_SOURCE})
 
 add_executable(ExtraccionCaracteristicas extraccion_caracteristicas.cpp )
 add_executable(BusquedaPorSimilitud busqueda_similitud.cpp )
 add_executable(DeteccionDeApariciones deteccion_apariciones.cpp )
 
-add_executable(tarea1MIR main.cpp)
+#add_executable(tarea1MIR main.cpp)
 target_link_libraries(tarea1MIRLib ${Boost_LIBRARIES} ${OpenCV_LIBS} )
 
 target_link_libraries(ExtraccionCaracteristicas tarea1MIRLib)
 target_link_libraries(BusquedaPorSimilitud tarea1MIRLib)
 target_link_libraries(DeteccionDeApariciones tarea1MIRLib)
-target_link_libraries(tarea1MIR tarea1MIRLib)
+#target_link_libraries(tarea1MIR tarea1MIRLib)
 
