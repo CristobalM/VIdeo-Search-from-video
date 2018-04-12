@@ -5,8 +5,8 @@
 #include "VideoFinder.h"
 
 const int STARTING_FRAME_ERROR_MARGIN = 10;
-const int MAX_DISTANCE_BETWEEN_FRAMES = 16;
-const int ERROR_MAX_TOLERANCE = 20;
+const int MAX_DISTANCE_BETWEEN_FRAMES = 15;
+const int ERROR_MAX_TOLERANCE = 19;
 const int LEFT_OFFSET = 5;
 
 const int MAX_FRAME_DIFF_BETWEEN_VIDEOS = 30*5;
